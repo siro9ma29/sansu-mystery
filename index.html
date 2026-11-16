@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>算数ミステリー・ファイル</title>
+<style>
+:root{
+  --navy:#17202e; --navy2:#202c3f; --navy3:#2b3a52;
+  --paper:#f5ecd9; --paper2:#efe2c6; --line:#e2d3b2;
+  --ink:#3a2e22; --ink2:#6b5a45;
+  --gold:#c9a24a; --gold2:#e6c574;
+  --red:#b3261e; --green:#2f7d4f; --blue:#2c5d8f;
+  --marker:rgba(255,230,60,.75);
+  --r:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{display:flex;flex-direction:column;height:100vh}
+body{
+  font-family:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Hiragino Sans","Meiryo",sans-serif;
+  background:var(--navy);
+  background-image:radial-gradient(circle at 20% 0%,#24324a 0,transparent 55%),radial-gradient(circle at 100% 100%,#1f2a3c 0,transparent 50%);
+  color:var(--ink); font-size:17px; line-height:1.75;
+}
+rt{font-size:.55em;color:inherit;opacity:.85}
+ruby{ruby-align:center}
+button{font-family:inherit;cursor:pointer}
+.serif{font-family:"Hiragino Mincho ProN","Yu Mincho","BIZ UDPMincho",serif}
+
+/* ===== ヘッダー ===== */
+header{
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:12px 22px;background:linear-gradient(#111926,#17202e);
+  border-bottom:2px solid var(--gold);box-shadow:0 4px 16px rgba(0,0,0,.4);
+  position:relative;z-index:5;
+}
+.logo{display:flex;align-items:center;gap:10px;color:var(--gold2)}
+.logo h1{margin:0;font-size:1.45rem;letter-spacing:.08em}
+.logo small{display:block;font-size:.7rem;color:#9fb0c8;letter-spacing:.2em}
+.tabs{display:flex;gap:8px;flex:1;min-width:0}
+.tab{
+  position:relative;min-height:52px;padding:6px 16px;border-radius:10px 10px 4px 4px;
+  border:1px solid #3d4f6c;background:var(--navy3);color:#c9d4e5;font-size:.85rem;text-align:left;flex:1 1 0;min-width:0;
+  transition:.2s;line-height:1.3;
+}
+.tab b{display:block;font-size:.72rem;color:var(--gold);letter-spacing:.1em}
+.tab:hover{background:#34476a;transform:translateY(-2px)}
+.tab.active{background:var(--paper);color:var(--ink);border-color:var(--gold)}
+.tab .badge{
+  position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;font-size:.65rem;font-weight:bold;
+  padding:2px 7px;border-radius:20px;transform:rotate(8deg);box-shadow:0 2px 4px rgba(0,0,0,.4);display:none;
+}
+.tab.cleared .badge{display:block}
+.hintBtn{
+  min-height:52px;padding:6px 20px;border-radius:30px;border:2px solid var(--gold);
+  background:transparent;color:var(--gold2);font-size:1rem;font-weight:bold;transition:.2s;
+}
+.hintBtn:hover{background:var(--gold);color:var(--navy)}
+.hintBtn span{font-size:.8rem;opacity:.85;margin-left:4px}
+
+/* ===== レイアウト ===== */
+main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;flex:1;min-height:0}
+.pane{overflow-y:auto;border-radius:var(--r);padding-right:4px}
+.pane::-webkit-scrollbar{width:8px}.pane::-webkit-scrollbar-thumb{background:#4a5a75;border-radius:8px}
+.right{display:flex;flex-direction:column;gap:14px}
+
+.paper{
+  background:var(--paper);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:22px 22px;border-radius:var(--r);padding:18px 20px;
+  box-shadow:0 6px 18px rgba(0,0,0,.35),inset 0 0 40px rgba(150,110,50,.12);
+}
+.sec{margin-bottom:14px}
+.secTitle{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:1.05rem;color:var(--ink);border-bottom:2px dashed #c8b48a;padding-bottom:4px}
+.secTitle .ic{width:28px;height:28px;border-radius:50%;background:var(--navy2);color:var(--gold2);display:grid;place-items:center;font-size:.85rem}
+
+.caseHead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.caseHead h2{margin:0;font-size:1.45rem;line-height:1.4}
+.caseHead .no{font-size:.8rem;letter-spacing:.25em;color:var(--red);font-weight:bold}
+.unit{font-size:.8rem;background:var(--navy2);color:var(--gold2);padding:3px 10px;border-radius:20px}
+.story{background:rgba(255,255,255,.55);border-left:5px solid var(--gold);padding:10px 14px;border-radius:6px;margin-top:10px}
+.tip{font-size:.85rem;color:var(--ink2);margin:6px 0 0}
+
+/* 難易度・新しい事件 */
+.lvBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 14px;padding:8px 10px;background:var(--navy2);border-radius:10px}
+.lvLabel{color:var(--gold2);font-size:.85rem;font-weight:bold;letter-spacing:.1em}
+.lvBtns{display:flex;gap:6px;flex:1;min-width:0}
+.lvBtn{flex:1 1 0;min-height:48px;border-radius:8px;border:2px solid #3d4f6c;background:var(--navy3);color:#c9d4e5;font-size:.95rem;font-weight:bold;line-height:1.2;padding:4px 6px}
+.lvBtn small{display:block;font-size:.7rem;font-weight:normal;color:var(--gold2)}
+.lvBtn.on{background:var(--paper);color:var(--ink);border-color:var(--gold)}
+.lvBtn.on small{color:#8a5a2b}
+.newBtn{min-height:48px;padding:4px 16px;border-radius:24px;border:2px solid var(--gold);background:var(--gold);color:var(--navy);font-size:.95rem;font-weight:bold}
+.newBtn:hover,.lvBtn:hover{filter:brightness(1.12)}
+.lvMsg{display:none;flex-basis:100%;background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:.9rem;animation:pop .3s}
+.lvMsg.show{display:block}
+.lvTag{display:inline-block;letter-spacing:.05em;color:#fff;padding:0 8px;border-radius:4px;font-size:.75rem;margin-left:4px}
+.lvTag.lv1{background:var(--green)}.lvTag.lv2{background:var(--blue)}.lvTag.lv3{background:var(--red)}
+@media (max-width:560px){.newBtn{flex-basis:100%}.lvLabel{display:none}.lvBtn{font-size:.85rem;padding:4px 2px}}
+
+/* 証拠カード */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{
+  position:relative;background:#fffaf0;border:1px solid #d9c59c;border-radius:10px;padding:12px 14px 12px;
+  box-shadow:2px 3px 0 #d3bf94;transition:transform .2s,box-shadow .2s;
+}
+.card:hover{transform:translateY(-3px) rotate(-.4deg);box-shadow:4px 7px 12px rgba(80,55,20,.25)}
+.card::before{ /* クリップ */
+  content:"";position:absolute;top:-9px;left:18px;width:14px;height:26px;border:3px solid #8d9aae;border-radius:8px;border-bottom-color:transparent;
+}
+.card .tag{display:inline-block;font-size:.75rem;font-weight:bold;color:#fff;background:var(--navy3);padding:1px 9px;border-radius:4px;margin-bottom:4px}
+.card.testimony .tag{background:#8a5a2b}
+.card.camera .tag{background:#5b3b7a}
+.card.wide{grid-column:1/-1}
+
+/* マーカー */
+.mk{
+  cursor:pointer;padding:0 2px;border-radius:3px;
+  background-image:linear-gradient(transparent 45%,var(--marker) 45%);
+  background-repeat:no-repeat;background-size:0% 100%;transition:background-size .45s ease;
+  border-bottom:2px dotted #b49a62;
+}
+.mk:hover{background-color:rgba(255,240,150,.3)}
+.mk.on{background-size:100% 100%;border-bottom-color:transparent}
+.num{font-weight:bold;color:#7a2d16}
+
+.diagram{background:#fffaf0;border:1px solid #d9c59c;border-radius:10px;padding:8px}
+.diagram svg{width:100%;height:auto;display:block}
+
+/* ===== 捜査ノート ===== */
+.noteGrid{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}
+textarea{
+  width:100%;min-height:150px;resize:vertical;border:1px solid #cdb88c;border-radius:8px;padding:10px;
+  font-family:inherit;font-size:1rem;line-height:1.7;color:var(--ink);
+  background:#fffdf6;background-image:linear-gradient(transparent 27px,#e8dcc0 28px);background-size:100% 28px;
+}
+.calc{background:var(--navy2);border-radius:10px;padding:8px}
+.calc .disp{background:#cfd9c3;color:#1e2a1a;font-family:"Courier New",monospace;font-size:1.2rem;text-align:right;padding:6px 8px;border-radius:6px;min-height:58px;word-break:break-all;line-height:1.3}
+.calc .disp small{display:block;font-size:.75rem;color:#4a5a44;min-height:1em}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}
+.keys button{min-height:42px;border:none;border-radius:7px;background:#3a4b66;color:#fff;font-size:1.1rem;transition:.1s}
+.keys button:active{transform:scale(.94)}
+.keys .op{background:#56688a;color:var(--gold2)}
+.keys .eq{background:var(--gold);color:var(--navy);font-weight:bold}
+.keys .cl{background:#7a3a34}
+.toMemo{width:100%;margin-top:5px;min-height:36px;border:1px dashed var(--gold);background:transparent;color:var(--gold2);border-radius:7px;font-size:.85rem}
+
+.cmp{margin-top:12px;background:rgba(255,255,255,.6);border:1px solid #d9c59c;border-radius:10px;padding:10px}
+.cmpRow{display:grid;grid-template-columns:1.3fr 90px 1.4fr;gap:8px;align-items:center;margin-bottom:6px}
+.cmpRow input{min-height:40px;border:1px solid #cdb88c;border-radius:6px;padding:4px 8px;font-size:.95rem;font-family:inherit;background:#fffdf6;width:100%}
+.bar{height:22px;background:#eadfc6;border-radius:4px;position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;width:0;transition:width .4s;border-radius:4px}
+.cmpInfo{font-size:.85rem;color:var(--ink2);text-align:right;min-height:1.4em}
+
+/* ===== 推理の提出 ===== */
+.submit{border:3px double #a88a52}
+.q{margin:0 0 6px;font-weight:bold}
+.q .qn{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font-size:.9rem;margin-right:6px}
+.choices{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.choice{
+  display:flex;gap:10px;align-items:center;text-align:left;min-height:50px;padding:8px 12px;
+  border:2px solid #d3bf94;border-radius:10px;background:#fffaf0;color:var(--ink);font-size:1rem;transition:.15s;
+}
+.choice:hover{border-color:var(--gold);transform:translateX(3px)}
+.choice .k{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink2);display:grid;place-items:center;font-weight:bold}
+.choice.sel{border-color:var(--navy3);background:#e7eef8;box-shadow:inset 0 0 0 1px var(--navy3)}
+.choice.sel .k{background:var(--navy3);color:#fff;border-color:var(--navy3)}
+.choice code,.eq{font-family:"Courier New",monospace;font-weight:bold;font-size:1.05em}
+.nums{display:flex;flex-wrap:wrap;gap:10px 18px;margin-bottom:14px}
+.nf{display:flex;align-items:center;gap:6px;font-size:1.05rem}
+.nf input{width:110px;min-height:48px;font-size:1.3rem;text-align:center;border:2px solid #cdb88c;border-radius:8px;background:#fffdf6;font-family:inherit}
+.nf input:focus,.cmpRow input:focus,textarea:focus{outline:3px solid var(--gold2)}
+.mark{font-weight:bold;font-size:1.2rem;width:1.2em;display:inline-block}
+.ok{color:var(--green)} .ng{color:var(--red)}
+.submitBtn{
+  width:100%;min-height:58px;border:none;border-radius:12px;font-size:1.2rem;font-weight:bold;letter-spacing:.1em;
+  background:linear-gradient(#2b3a52,#17202e);color:var(--gold2);box-shadow:0 4px 0 #0c1119;transition:.12s;
+}
+.submitBtn:hover{filter:brightness(1.15)}
+.submitBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #0c1119}
+.feedback{margin-top:12px;border-radius:10px;padding:12px 14px;display:none;animation:pop .35s ease}
+.feedback.show{display:block}
+.feedback.wrong{background:#fff3e0;border:2px solid #e3a65a}
+.feedback.info{background:#eef3f9;border:2px solid #9db3cf}
+.feedback h4{margin:0 0 6px;font-size:1.05rem}
+.feedback ul{margin:4px 0;padding-left:0;list-style:none}
+.feedback li{margin:4px 0}
+.solvedBox{text-align:center;padding:8px}
+.solvedBox .mini{display:inline-block;border:3px solid var(--red);color:var(--red);font-weight:bold;padding:2px 14px;transform:rotate(-6deg);letter-spacing:.15em;margin-bottom:8px}
+.ghost{min-height:46px;padding:4px 18px;border-radius:10px;border:2px solid var(--navy3);background:#fff;color:var(--navy3);font-size:.95rem;font-weight:bold;margin:4px}
+.ghost:hover{background:var(--navy3);color:#fff}
+
+/* ===== モーダル ===== */
+.overlay{position:fixed;inset:0;background:rgba(10,14,22,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.show{display:flex;animation:fade .25s}
+.modal{max-width:720px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal h3{margin:0 0 10px;font-size:1.3rem}
+.close{position:absolute;top:10px;right:12px;width:44px;height:44px;border-radius:50%;border:none;background:var(--navy2);color:#fff;font-size:1.3rem}
+.hintItem{background:#fffaf0;border:1px solid #d9c59c;border-left:6px solid var(--gold);border-radius:8px;padding:10px 14px;margin-bottom:10px;animation:slide .35s ease}
+.hintItem b{color:#8a5a2b}
+.hintLock{border:2px dashed #c8b48a;border-radius:8px;padding:10px 14px;color:var(--ink2);margin-bottom:10px;text-align:center}
+.hintNext{width:100%;min-height:52px;border:none;border-radius:10px;background:var(--gold);color:var(--navy);font-size:1.05rem;font-weight:bold}
+.hintNext:disabled{opacity:.45;cursor:default}
+
+.stampWrap{text-align:center;margin:6px 0 14px;height:150px;position:relative;pointer-events:none}
+.close{z-index:3}
+.stamp{
+  display:inline-block;border:6px double var(--red);color:var(--red);border-radius:12px;padding:8px 26px;
+  transform:rotate(-10deg) scale(3);opacity:0;animation:stamp .55s cubic-bezier(.2,1.6,.4,1) .15s forwards;
+  background:rgba(255,255,255,.4);
+  -webkit-mask-image:radial-gradient(circle at 30% 40%,#000 60%,rgba(0,0,0,.75) 61%);
+}
+.stamp .en{font-size:2.2rem;font-weight:900;letter-spacing:.12em;line-height:1.1;font-family:Impact,"Arial Black",sans-serif}
+.stamp .jp{font-size:1.3rem;font-weight:bold;letter-spacing:.3em}
+.steps{counter-reset:s;padding:0;margin:0;list-style:none}
+.steps li{counter-increment:s;position:relative;padding:10px 12px 10px 52px;margin-bottom:8px;background:#fffaf0;border:1px solid #d9c59c;border-radius:8px;opacity:0;animation:slide .4s ease forwards}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:30px;height:30px;border-radius:50%;background:var(--navy3);color:var(--gold2);display:grid;place-items:center;font-weight:bold}
+.steps li .st{display:block;font-weight:bold;color:var(--navy3)}
+.note{background:#eef3f9;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:.95rem}
+.allClear{text-align:center;color:var(--red);font-weight:bold;margin-top:10px;font-size:1.1rem}
+
+@keyframes stamp{0%{opacity:0;transform:rotate(-10deg) scale(3)}70%{opacity:1;transform:rotate(-10deg) scale(.92)}100%{opacity:1;transform:rotate(-10deg) scale(1)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@keyframes slide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.shake{animation:shake .3s 2}
+
+/* ===== レスポンシブ ===== */
+@media (max-width:1100px){ .tabs{order:3;flex-basis:100%} .logo h1{font-size:1.25rem} header{padding:10px 16px;gap:10px;justify-content:space-between} }
+@media (max-width:900px){
+  body{height:auto;display:block} main{grid-template-columns:1fr}
+  .pane{overflow:visible}
+  .noteGrid{grid-template-columns:1fr}
+}
+@media (max-width:560px){ .cards{grid-template-columns:1fr} .cmpRow{grid-template-columns:1fr 80px} .cmpRow .bar{grid-column:1/-1} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="16" cy="16" r="11" fill="none" stroke="#e6c574" stroke-width="4"/>
+      <circle cx="16" cy="16" r="7" fill="rgba(230,197,116,.18)"/>
+      <line x1="24" y1="24" x2="36" y2="36" stroke="#e6c574" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+    <div><h1 class="serif">算数ミステリー・ファイル</h1><small>SANSU MYSTERY FILE</small></div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+  <button class="hintBtn" id="hintBtn">🔎 ヒント<span id="hintCount"></span></button>
+</header>
+
+<main>
+  <!-- 左：事件ファイル -->
+  <section class="pane">
+    <div class="paper" id="caseFile"></div>
+  </section>
+
+  <!-- 右：捜査ノート＆推理の提出 -->
+  <section class="pane right">
+    <div class="paper">
+      <h3 class="secTitle"><span class="ic">✎</span><span>{捜査|そうさ}ノート</span></h3>
+      <div class="noteGrid">
+        <div>
+          <textarea id="memo" placeholder="気づいたことや計算を自由にメモしよう。&#10;（例）1.2km = 1200m"></textarea>
+        </div>
+        <div class="calc">
+          <div class="disp"><small id="calcExpr"></small><span id="calcOut">0</span></div>
+          <div class="keys" id="keys"></div>
+          <button class="toMemo" id="toMemo">↓ 答えをメモに書く</button>
+        </div>
+      </div>
+      <div class="cmp">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+          <b style="font-size:.95rem">📏 数をならべてくらべる（線分図メモ）</b>
+          <button class="ghost" id="cmpClear" style="min-height:36px;padding:2px 12px;font-size:.8rem">けす</button>
+        </div>
+        <div id="cmpRows"></div>
+        <div class="cmpInfo" id="cmpInfo"></div>
+      </div>
+    </div>
+
+    <div class="paper submit" id="submitArea"></div>
+  </section>
+</main>
+
+<!-- ヒント -->
+<div class="overlay" id="hintOv">
+  <div class="paper modal">
+    <button class="close" data-close="hintOv" aria-label="とじる">✕</button>
+    <h3 class="serif">🔎 探{偵|てい}のヒント手帳</h3>
+    <div id="hintBody"></div>
+  </div>
+</div>
+
+<!-- 正解 -->
+<div class="overlay" id="clearOv">
+  <div class="paper modal">
+    <button class="close" data-close="clearOv" aria-label="とじる">✕</button>
+    <div class="stampWrap"><div class="stamp"><div class="en">CASE CLOSED</div><div class="jp">事件解決！</div></div></div>
+    <h3 class="serif" id="clearTitle"></h3>
+    <ol class="steps" id="clearSteps"></ol>
+    <div class="note" id="clearNote"></div>
+    <div class="allClear" id="allClear"></div>
+    <div style="text-align:center;margin-top:12px" id="clearBtns"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   表記ヘルパー
+   {漢字|よみ} → ルビ、 [[文]] → クリックでマーカーが引ける部分
+   ========================================================= */
+function rb(s){return s.replace(/\{([^|{}]+)\|([^{}]+)\}/g,'<ruby>$1<rt>$2</rt></ruby>');}
+function fmt(s,ctr){
+  s=rb(s);
+  if(!ctr) return s;
+  return s.replace(/\[\[(.+?)\]\]/g,function(m,t){return '<span class="mk" data-mk="'+(ctr.i++)+'">'+t+'</span>';});
+}
+document.querySelectorAll('.secTitle span:last-child, h3.serif, b').forEach(function(el){
+  if(el.innerHTML.indexOf('{')>=0) el.innerHTML=rb(el.innerHTML);
+});
+
+/* =========================================================
+   乱数（seed つき：同じ seed なら同じ問題を作り直せる）
+   ========================================================= */
+function RNG(seed){
+  var a=seed>>>0;
+  var f=function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};
+  return {
+    int:function(lo,hi){return lo+Math.floor(f()*(hi-lo+1));},
+    pick:function(arr){return arr[Math.floor(f()*arr.length)];},
+    shuffle:function(arr){arr=arr.slice();for(var i=arr.length-1;i>0;i--){var j=Math.floor(f()*(i+1)),t=arr[i];arr[i]=arr[j];arr[j]=t;}return arr;}
+  };
+}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=a%b;a=b;b=t;}return a;}
+function lcm(a,b){return a/gcd(a,b)*b;}
+function near(x,y){return Math.abs(x-y)<0.01;}
+function dec(x){return String(Math.round(x*1000)/1000);}
+var KANA=['ア','イ','ウ'];
+/* 選択肢をまぜて ア・イ・ウ をつける。items:[{id,t,adv}] */
+function arrange(R,items,correctId){
+  var o={choices:[],adviceChoice:{},L:{}};
+  R.shuffle(items).forEach(function(it,i){
+    var k=KANA[i];o.choices.push({k:k,t:it.t});o.L[it.id]=k;
+    if(it.id!==correctId) o.adviceChoice[k]=it.adv;
+  });
+  o.correct=o.L[correctId];return o;
+}
+var LV_NAME=['','やさしい','ふつう','むずかしい'];
+
+/* =========================================================
+   事件01：速さ（アリバイ）
+   やさしい：道のりは m、速さは分速、カメラは早すぎる
+   ふつう　：道のりは km（m に直す）
+   むずかしい：証言の速さが時速 km、コンビニは真ん中でない、カメラは早い／おそいの両方
+   ========================================================= */
+function tm(m){return Math.floor(m/60)+'時'+('0'+m%60).slice(-2)+'分';}
+function hm(m){return Math.floor(m/60)+':'+('0'+m%60).slice(-2);}
+function gen01(lv,R){
+  var v=80,t1=15,t2=12,D=1200,w=100,ok=false;
+  for(var n=0;n<400&&!ok;n++){
+    v=R.pick(lv===3?[50,60,70,75,80,90,100]:[50,60,70,80,90,100]);
+    t1=R.int(lv===1?8:10,lv===1?15:20);
+    D=v*t1;
+    if(lv>=2&&D%100) continue;
+    var cand=[];
+    for(var t=Math.max(5,t1-6);t<=t1+6;t++){
+      if(Math.abs(t-t1)<2||D%t) continue;
+      var ww=D/t;
+      if(ww<40||ww>150) continue;
+      if(lv<3&&t>t1) continue;
+      if(lv===1&&ww%10) continue;
+      cand.push(t);
+    }
+    if(!cand.length) continue;
+    t2=R.pick(cand);w=D/t2;ok=true;
+  }
+  if(!ok){v=80;t1=15;t2=12;D=1200;w=100;}
+  // コンビニから駅まで
+  var k2=t1,E=D;
+  if(lv===3){
+    var ks=[];for(var k=8;k<=20;k++){if(k!==t1&&(v*k)%100===0)ks.push(k);}
+    if(ks.length){k2=R.pick(ks);E=v*k2;}
+  }
+  var S=D+E,tt=t1+k2;
+  var st=R.int(9,15)*60+R.pick([0,10,20,30,40]);
+  var name=R.pick(['Aくん','Bさん','Cくん','Dさん']);
+  var dist=function(m){return lv===1?m+'m':dec(m/1000)+'km';};
+  var claim=lv===3?'時速'+dec(v*60/1000)+'km':'分速'+v+'m';
+  var diff=Math.abs(t1-t2),early=t2<t1;
+  var items=[
+    {id:'c',t:claim+'だとコンビニ通過は'+tm(st+t1)+'になるはずで、カメラの時刻は'+diff+'分'+(early?'早すぎる':'おそすぎる')},
+    {id:'a',t:claim+'だと、駅に着くのが'+tm(st+tt)+'に間に合わない',
+     adv:(lv===3?'まず時速を分速になおそう。そのうえで、':'')+'分速'+v+'mで'+S+'m歩くと何分かかるかな？ <span class="eq">'+S+' ÷ '+v+'</span> を計算して、駅に着く時刻をたしかめてみよう。'}
+  ];
+  if(lv===1) items.push({id:'u',t:'カメラの時刻は、証言どおりに歩いたときの時刻とぴったり同じなので、{矛盾|むじゅん}はない',
+     adv:'<span class="eq">'+D+' ÷ '+v+'</span> を計算して、証言どおりならコンビニに何時何分に着くかを出し、カメラの時刻とくらべてみよう。'});
+  else if(lv===2) items.push({id:'u',t:dist(S)+'は'+(S/10)+'mなので、計算が合わない',adv:'1km は何m だったかな？ 1km ＝ 1000m だよ。'});
+  else items.push({id:'u',t:claim+'は分速'+(v*60)+'mなので、コンビニに早く着きすぎる',
+     adv:'時速は「1時間（60分）に進む道のり」。分速になおすには、m になおしてから <b>60 でわる</b>よ。'});
+  var A=arrange(R,items,'c');
+  var cards=[
+    {tag:'証{拠|こ}①',cls:'',text:'タイムカプセルが{掘|ほ}られた時刻は [[<span class="num">'+tm(st)+'</span>]]。'},
+    {tag:'証{拠|こ}②',cls:'',text:'学校から駅までの道のりは [[<span class="num">'+dist(S)+'</span>]]。'+
+      (lv<3?'[[ちょうど真ん中（<span class="num">'+dist(D)+'</span>地点）にコンビニ]]がある。':'[[学校から <span class="num">'+dist(D)+'</span> の地点にコンビニ]]がある。')},
+    {tag:'証言（'+name+'）',cls:'testimony wide',text:'「[['+tm(st)+'に学校を出て]]、ずっと [[<span class="num">'+claim+'</span>]] で歩いて駅に向かいました。」'},
+    {tag:'証{拠|こ}③ 防犯カメラ',cls:'camera wide',text:'コンビニ前を'+name+'が通過したのは [[<span class="num">'+tm(st+t2)+'</span>]] だった。'}
+  ];
+  var hints=[
+    (lv===3?'証言の速さは<b>時速</b>だね。まず<b>分速</b>（1分間に進む道のり）になおそう。そのうえで、':'')+name+'の言う速さで、コンビニ（'+dist(D)+'地点）まで行くと<b>何分かかるか</b>に注目しよう。'+(lv>=2?'km と m、単位をそろえるのをわすれずに。':''),
+    (lv>=2?dist(D)+' ＝ '+D+'m。<br>':'')+(lv===3?'時速'+dec(v*60/1000)+'km ＝ 1時間（60分）に'+(v*60)+'m → 1分間では '+(v*60)+' ÷ 60 ＝ '+v+'（m）。<br>':'')+
+      D+' ÷ '+v+' ＝ □（分）。'+tm(st)+'に出発すると、コンビニには何時何分に着くはず？',
+    '証言どおりなら、コンビニ着は'+tm(st+t1)+'。でもカメラには<b>'+tm(st+t2)+'</b>に映っている。<br>本当は'+t2+'分で'+D+'m進んだことになるね。<b>速さ ＝ 道のり ÷ 時間</b>で求めよう。'
+  ];
+  var explain=[];
+  if(lv===2) explain.push(['単位をそろえる',dist(D)+' ＝ <span class="eq">'+D+'m</span>']);
+  if(lv===3) explain.push(['単位をそろえる',dist(D)+' ＝ <span class="eq">'+D+'m</span>。'+claim+' ＝ 時速'+(v*60)+'m → <span class="eq">'+(v*60)+' ÷ 60 ＝ '+v+'</span> → 分速'+v+'m']);
+  explain.push(['証言どおりにかかる時間','<span class="eq">'+D+' ÷ '+v+' ＝ '+t1+'</span>（分）→ コンビニに着くのは <b>'+tm(st+t1)+'</b> のはず']);
+  explain.push(['カメラの証{拠|こ}とくらべる','実際は <b>'+tm(st+t2)+'</b>。'+tm(st+t1)+'より <b>'+diff+'分'+(early?'早い':'おそい')+'</b>！ → 証言と{矛盾|むじゅん}する（答え：'+A.correct+'）']);
+  explain.push(['本当の速さを求める',t2+'分で'+D+'m進んだので、<span class="eq">'+D+' ÷ '+t2+' ＝ '+w+'</span> → <b>分速'+w+'m</b>']);
+  return {
+    no:'01',title:'消えたタイムカプセルのアリバイ',unit:['','速さ（道のり・時間）','速さ・単位をそろえる','速さ・時速と分速'][lv],lv:lv,
+    story:tm(st)+'、学校の校庭からタイムカプセルが{掘|ほ}り起こされた！ 現場から'+dist(S)+'はなれた駅に、'+tm(st+tt)+'にいた'+name+'が疑われている。'+name+'の証言にウソがないか、{推理|すいり}せよ。',
+    cards:cards,
+    svg:svgRoute({S:S,D:D,dist:dist,st:st,cam:st+t2,end:st+tt}),
+    choiceQ:name+'の証言には、どんな{矛盾|むじゅん}がある？',
+    choices:A.choices,correct:A.correct,adviceChoice:A.adviceChoice,
+    numQ:'もし'+name+'が'+tm(st)+'に学校を出て、'+tm(st+t2)+'にコンビニ（'+dist(D)+'地点）に着いたなら、そこまでの実際の速さは「分速何m」だった？',
+    fields:[{pre:'分速',unit:'m',ans:w}],
+    hints:hints,explain:explain,
+    note:'💡 落とし穴：'+claim+'でも、駅までは <span class="eq">'+S+' ÷ '+v+' ＝ '+tt+'</span>（分）で'+tm(st+tt)+'に着く。だから「駅の時刻」だけを見ても{矛盾|むじゅん}は見つからない。<b>とちゅうの証{拠|こ}（コンビニのカメラ）</b>を調べたのが決め手だったね。',
+    adviceNum:function(vals){
+      var x=vals[0];
+      if(near(x,v)) return x+'は、'+name+'が「言った」速さだね。カメラの時刻（'+tm(st+t2)+'）から、<b>本当の</b>速さを求めよう。';
+      if(near(x,w/1000)) return x+' は「分速何km」の答えになっているよ。m にそろえると、'+dist(D)+' ＝ '+D+'m だね。';
+      if(near(x,w*60)||near(x,w*60/1000)) return 'それは<b>時速</b>の答えになっているよ。聞かれているのは<b>分速</b>（1分間に進む道のり）だね。';
+      if(near(x,t1)||near(x,t2)) return x+' は「時間（分）」の数だね。速さ ＝ 道のり ÷ 時間 で計算しよう。';
+      if(near(x,S/t2)) return '道のりは学校からコンビニまでの '+dist(D)+'（'+D+'m）だよ。駅までの '+dist(S)+' 全部ではないね。';
+      if(near(x,D/diff)) return '時間は、学校を出てからコンビニに着くまでの<b>'+t2+'分</b>だよ。ずれた'+diff+'分ではないね。';
+      return '学校を出てからコンビニまで<b>何分</b>かかったか、そして<b>何m</b>進んだかを証{拠|こ}カードから見直そう。';
+    },
+    cmp:['証言どおりの到着（分後）','カメラの到着（分後）','']
+  };
+}
+
+/* =========================================================
+   事件02：比（黄金の比率）
+   やさしい：青の数がはじめからそろっている
+   ふつう　：片方の比だけを何倍かして青をそろえる
+   むずかしい：両方の比を何倍かする（最小公倍数）＋合計が L
+   ========================================================= */
+function gen02(lv,R){
+  var a1=2,b1=3,b2=6,c2=5,L=6,r=4,s=6,t=5,ok=false;
+  for(var n=0;n<2000&&!ok;n++){
+    a1=R.int(1,lv===1?5:7);b1=R.int(2,lv===1?6:9);
+    if(lv===1) b2=b1; else b2=R.int(2,9);
+    c2=R.int(1,lv===1?6:8);
+    if(gcd(a1,b1)!==1||gcd(b2,c2)!==1) continue;
+    L=lcm(b1,b2);
+    if(lv===2&&(b1===b2||(L!==b1&&L!==b2))) continue;
+    if(lv===3&&(L===b1||L===b2||L>24)) continue;
+    r=a1*L/b1;s=L;t=c2*L/b2;
+    if(gcd(gcd(r,s),t)!==1) continue;
+    if(r===s||s===t||r===t||r>20||t>20) continue;
+    ok=true;
+  }
+  if(!ok){a1=2;b1=3;b2=6;c2=5;L=6;r=4;s=6;t=5;}
+  var P=r+s+t,us=[];
+  for(var u=5;u<=200;u+=5){
+    var T=P*u;
+    if(lv===1&&T<=600&&u%10===0) us.push(u);
+    if(lv===2&&T>=200&&T<=900) us.push(u);
+    if(lv===3&&T%100===0&&T>=600&&T<=3000) us.push(u);
+  }
+  if(!us.length){for(u=10;u<=500;u+=10){if((P*u)%100===0){us.push(u);break;}}}
+  u=R.pick(us);var Tm=P*u;
+  var total=lv===3?dec(Tm/1000)+'L':Tm+'mL';
+  var R3=function(x){return '<code>'+x[0]+' : '+x[1]+' : '+x[2]+'</code>';};
+  var items=[{id:'c',t:R3([r,s,t])}];
+  var naive,half;
+  if(lv===1){
+    items.push({id:'x',t:R3([r,t,s]),adv:'青と黄の順番が入れかわっていないかな？ <b>赤：青：黄</b> の順にならべよう。'});
+    items.push({id:'y',t:R3([s,r,t]),adv:'赤と青の順番が入れかわっていないかな？ 暗号メモ①は「<b>赤：青</b>」の順だよ。'});
+  }else{
+    naive=[a1,b1!==L?b1:b2,c2];
+    half=[b1!==L?a1:r,L,b2!==L?c2:t];
+    items.push({id:'x',t:R3(naive),adv:'2つのメモでは、青が「'+b1+'」と「'+b2+'」でちがっているね。青の数を同じにそろえてから、つなげてみよう。'});
+    items.push({id:'y',t:R3(half),adv:'青だけを '+L+' にして、となりの数をそのままにしていないかな？ 比は、両方に同じ数をかけないと変わってしまうよ。'});
+  }
+  var A=arrange(R,items,'c');
+  // 青をそろえる説明
+  var sc=[];
+  sc.push(b1!==L?'赤：青 ＝ '+a1+'：'+b1+' の両方を <b>'+(L/b1)+'倍</b> して <span class="eq">'+r+'：'+L+'</span>':'赤：青 ＝ <span class="eq">'+a1+'：'+b1+'</span>（そのまま）');
+  sc.push(b2!==L?'青：黄 ＝ '+b2+'：'+c2+' の両方を <b>'+(L/b2)+'倍</b> して <span class="eq">'+L+'：'+t+'</span>':'青：黄 ＝ <span class="eq">'+b2+'：'+c2+'</span>（そのまま）');
+  var hints=[
+    lv===1?'2つの比に共通して出てくるのは「<b>青</b>」。2つのメモで、青の数が同じになっているかな？':
+      '2つの比に共通して出てくるのは「<b>青</b>」。青の数をそろえると、3つを1つの比にまとめられるよ。'+(lv===3?'<br>青の '+b1+' と '+b2+' は、どちらかを何倍かしただけではそろわないね。':''),
+    lv===1?'赤：青 ＝ '+a1+'：'+b1+'、青：黄 ＝ '+b2+'：'+c2+'。青が <b>'+b1+'</b> でそろっているから、そのままつなげられるね。':
+      (lv===3?b1+' でも '+b2+' でもわりきれる、いちばん小さい数（最小公倍数）は <b>'+L+'</b>。<br>':'')+sc.join('。<br>')+'。<br>これで青が <b>'+L+'</b> にそろったね。',
+    (lv===3?total+' ＝ '+Tm+'mL。<br>':'')+'赤：青：黄 ＝ '+r+'：'+s+'：'+t+' → 全部で '+r+'＋'+s+'＋'+t+' ＝ <b>'+P+'こ分</b>。<br>'+Tm+'mL を'+P+'こに分けると1こ分は何mL？ それに '+r+'、'+s+'、'+t+' をかけよう。'
+  ];
+  var explain=[];
+  explain.push(['青の数をそろえる',lv===1?'赤：青 ＝ '+a1+'：'+b1+'、青：黄 ＝ '+b2+'：'+c2+'。青はどちらも <b>'+b1+'</b>':(lv===3?'青の '+b1+' と '+b2+' の最小公倍数は <b>'+L+'</b>。':'')+sc.join('。')]);
+  explain.push(['3つの比にまとめる','赤：青：黄 ＝ <span class="eq">'+r+'：'+s+'：'+t+'</span>（答え：'+A.correct+'）']);
+  if(lv===3) explain.push(['単位をそろえる',total+' ＝ <span class="eq">'+Tm+'mL</span>']);
+  explain.push(['1こ分の量を求める','全部で <span class="eq">'+r+'＋'+s+'＋'+t+' ＝ '+P+'</span>（こ分）。<span class="eq">'+Tm+' ÷ '+P+' ＝ '+u+'</span> → 1こ分は '+u+'mL']);
+  explain.push(['それぞれの量','赤 <span class="eq">'+u+'×'+r+'＝'+(u*r)+'</span>mL、青 <span class="eq">'+u+'×'+s+'＝'+(u*s)+'</span>mL、黄 <span class="eq">'+u+'×'+t+'＝'+(u*t)+'</span>mL']);
+  explain.push(['たしかめ',(u*r)+'＋'+(u*s)+'＋'+(u*t)+' ＝ '+Tm+' ○　'+(u*r)+'：'+(u*s)+' ＝ '+a1+'：'+b1+' ○　'+(u*s)+'：'+(u*t)+' ＝ '+b2+'：'+c2+' ○']);
+  var nv=naive?naive.map(function(x){return Tm*x/(naive[0]+naive[1]+naive[2]);}):null;
+  return {
+    no:'02',title:'{怪盗|かいとう}からの{挑|ちょう}戦状と黄金の比率',unit:['','比・3つの数の比','比・3つの数の比・全体を分ける','比・最小公倍数でそろえる'][lv],lv:lv,
+    story:'美術館の金庫を開けるには、赤・青・黄の3つの液体を「黄金の比率」で混ぜて、合計 '+total+' の薬品を作らなければならない。暗号メモから、それぞれの量をつきとめよ！',
+    cards:[
+      {tag:'暗号メモ①',cls:'',text:'「[[赤と青の量の比は <span class="num">'+a1+' : '+b1+'</span>]] にせよ」'},
+      {tag:'暗号メモ②',cls:'',text:'「[[青と黄の量の比は <span class="num">'+b2+' : '+c2+'</span>]] にせよ」'},
+      {tag:'暗号メモ③',cls:'wide',text:'「3つの液体を合わせて [[ちょうど <span class="num">'+total+'</span>]] にせよ」'}
+    ],
+    svg:svgBeaker(a1+' : '+b1,b2+' : '+c2,total),
+    choiceQ:'赤：青：黄 を、いちばん簡単な整数の比で表すと？',
+    choices:A.choices,correct:A.correct,adviceChoice:A.adviceChoice,
+    numQ:'それぞれの薬品は何mL ずつ必要？',
+    fields:[{pre:'赤',unit:'mL',ans:u*r},{pre:'青',unit:'mL',ans:u*s},{pre:'黄',unit:'mL',ans:u*t}],
+    hints:hints,explain:explain,
+    note:lv===1?'💡 2つの比をつなぐときは、<b>共通する数（ここでは青）</b>に注目。今回は青がどちらも '+b1+' だったので、そのままつなげられたね。青の数がちがうときは、同じ数にそろえてからつなげよう。':
+      '💡 2つの比をつなぐときは、<b>共通する数（ここでは青）</b>を同じ数にそろえるのがコツ。'+a1+'：'+b1+' と '+b2+'：'+c2+' をそのままならべると、青が「'+b1+'」と「'+b2+'」でちがってしまうね。',
+    adviceNum:function(v){
+      var sum=v[0]+v[1]+v[2];
+      if(nv&&near(v[0],nv[0])&&near(v[1],nv[1])&&near(v[2],nv[2])) return 'それは '+naive.join('：')+' で分けた量だね。まずは3つの比を正しくまとめよう（選択式の問題を見直そう）。';
+      if(lv===3&&near(sum,Tm/1000)) return 'L で答えているみたいだね。答えは <b>mL</b> で書こう。'+total+' ＝ '+Tm+'mL だよ。';
+      if(!near(sum,Tm)) return '3つの合計が '+dec(sum)+'mL になっているよ。メモ③より、合計は <b>'+Tm+'mL</b> になるはず。';
+      return '合計は'+Tm+'mLになっているね！ あとは比をたしかめよう。<b>赤：青 ＝ '+a1+'：'+b1+'</b>、<b>青：黄 ＝ '+b2+'：'+c2+'</b> になっているかな？';
+    },
+    cmp:['赤（こ分）','青（こ分）','黄（こ分）']
+  };
+}
+
+/* =========================================================
+   事件03：文字を使った式（ブラックボックス）
+   やさしい：x が1ずつふえる、ルールは「×□＋□」
+   ふつう　：x のふえ方がばらばら、「＋」か「－」
+   むずかしい：かける数が大きめ、x のふえ方がばらばら、解除キーも大きい
+   ========================================================= */
+function ruleTxt(a,b){return 'x × '+a+(b>0?' ＋ '+b:b<0?' － '+(-b):'')+' ＝ y';}
+function gen03(lv,R){
+  var a=3,b=2,xs=[3,5,10],xt=16,ok=false;
+  for(var n=0;n<1000&&!ok;n++){
+    if(lv===1){a=R.int(2,5);b=R.int(1,9);var s0=R.int(2,5);xs=[s0,s0+1,s0+2];xt=R.int(8,15);}
+    else if(lv===2){a=R.int(2,6);b=R.pick([1,-1])*R.int(1,9);var s1=R.int(2,5);xs=[s1,s1+2,s1+R.int(4,7)];xt=R.int(12,25);}
+    else{a=R.int(3,9);b=R.pick([1,-1])*R.int(1,15);var p=R.shuffle([2,3,4,5,6,7,8,9,10,11,12]).slice(0,3).sort(function(x,y){return x-y;});xs=p;xt=R.int(15,40);
+      if(xs[1]-xs[0]<2) continue;}
+    if(a*xs[0]+b<=0) continue;
+    if(xs.indexOf(xt)>=0) continue;
+    // まぎらわしい式：x1 では同じ答えになる
+    var a2=a+1,a3=a-1>=2?a-1:a+2;
+    var b2=a*xs[0]+b-a2*xs[0],b3=a*xs[0]+b-a3*xs[0];
+    if(b2===0||b3===0||b2===b) continue;
+    ok=true;
+  }
+  if(!ok){a=3;b=2;xs=[3,5,10];xt=16;a2=4;a3=2;b2=-1;b3=5;}
+  var f=function(x){return a*x+b;},ys=xs.map(f),Y=f(xt);
+  var d=xs[1]-xs[0],dy=ys[1]-ys[0];
+  var items=[
+    {id:'c',t:'<code>'+ruleTxt(a,b)+'</code>'},
+    {id:'p',t:'<code>'+ruleTxt(a2,b2)+'</code>',adv:'x ＝ '+xs[0]+' のときは '+ys[0]+' になるね。でも x ＝ '+xs[1]+' を入れるとどうなるかな？ ほかのデータでもたしかめてみよう。'},
+    {id:'q',t:'<code>'+ruleTxt(a3,b3)+'</code>',adv:'x ＝ '+xs[0]+' のときは '+ys[0]+' になるね。でも x ＝ '+xs[1]+' を入れるとどうなるかな？ ほかのデータでもたしかめてみよう。'}
+  ];
+  var A=arrange(R,items,'c');
+  var op=b>0?'＋'+b:'－'+(-b),Z=Y-b;
+  var back=b>0?Y+' － '+b+' ＝ '+Z:Y+' ＋ '+(-b)+' ＝ '+Z;
+  var hints=[
+    '入力が '+xs[0]+' → '+xs[1]+' と <b>'+d+'</b> ふえると、出力は '+ys[0]+' → '+ys[1]+' といくつふえたかな？'+(lv===3?'<br>x のふえ方がデータごとにちがうから、<b>x が1ふえるといくつふえるか</b>を考えよう。':''),
+    (d===1?'x が1ふえると y は <b>'+a+'</b> ふえる。':'x が'+d+'ふえると y は'+dy+'ふえる → x が1ふえるごとに y は <b>'+a+'</b> ふえる（'+dy+' ÷ '+d+' ＝ '+a+'）。')+
+      'だから「x × '+a+'」がもとになっていそう。<br>'+xs[0]+' × '+a+' ＝ '+(a*xs[0])+'。'+ys[0]+' にするには、'+(b>0?'あといくつたす？':'いくつひけばいい？'),
+    'ルールは '+ruleTxt(a,b)+'。y ＝ '+Y+' から<b>逆にたどろう</b>。<br>「'+op+'」の前は '+back+'、「×'+a+'」の前は '+Z+' ÷ '+a+' ＝ □。'
+  ];
+  var explain=[
+    ['ふえ方を調べる','x が '+xs[0]+'→'+xs[1]+'（<b>'+d+'ふえる</b>）と、y は '+ys[0]+'→'+ys[1]+'（<b>'+dy+'ふえる</b>）。x が1ふえると y は'+a+'ふえる → <span class="eq">x × '+a+'</span>'],
+    [b>0?'たす数を見つける':'ひく数を見つける','<span class="eq">'+xs[0]+' × '+a+' ＝ '+(a*xs[0])+'</span>、'+(b>0?ys[0]+' － '+(a*xs[0])+' ＝ '+b:(a*xs[0])+' － '+ys[0]+' ＝ '+(-b))+' → <span class="eq">'+ruleTxt(a,b)+'</span>'],
+    ['全部のデータでたしかめる',xs[1]+'×'+a+op+' ＝ '+ys[1]+' ○　'+xs[2]+'×'+a+op+' ＝ '+ys[2]+' ○（答え：'+A.correct+'）'],
+    ['逆にたどって解除キーを求める','<span class="eq">'+back+'</span>、<span class="eq">'+Z+' ÷ '+a+' ＝ '+xt+'</span> → <b>x ＝ '+xt+'</b>'],
+    ['たしかめ',xt+' × '+a+' '+(b>0?'＋ '+b:'－ '+(-b))+' ＝ '+Y+' ○']
+  ];
+  var vp=a2*xs[1]+b2,vq=a3*xs[1]+b3;
+  return {
+    no:'03',title:'なぞの暗号装置「ブラックボックス」',unit:['','文字を使った式（x と y）','文字を使った式（x と y）','文字を使った式・逆にたどる'][lv],lv:lv,
+    story:'{怪盗|かいとう}がしかけた時限装置の解除パスワードを解読せよ。装置に数（x）を入れると、決まった計算のルールで、べつの数（y）が出てくる仕組みだ。ルールを見破り、解除キーを入力せよ！',
+    cards:[
+      {tag:'実験データ①',cls:'',text:'入力 [[<span class="num">'+xs[0]+'</span>]] → 出力 [[<span class="num">'+ys[0]+'</span>]]'},
+      {tag:'実験データ②',cls:'',text:'入力 [[<span class="num">'+xs[1]+'</span>]] → 出力 [[<span class="num">'+ys[1]+'</span>]]'},
+      {tag:'実験データ③',cls:'',text:'入力 [[<span class="num">'+xs[2]+'</span>]] → 出力 [[<span class="num">'+ys[2]+'</span>]]'},
+      {tag:'解除の条件',cls:'testimony',text:'装置から [[<span class="num">y ＝ '+Y+'</span>]] が出たとき、時限装置は止まる。'}
+    ],
+    svg:svgBox(xs.map(function(x,i){return [x,ys[i]];})),
+    choiceQ:'入れた数を <code>x</code>、出てくる数を <code>y</code> としたとき、装置の計算のルールを表す式はどれ？',
+    choices:A.choices,correct:A.correct,adviceChoice:A.adviceChoice,
+    numQ:'装置から <code>y ＝ '+Y+'</code> が出てくるようにするには、x にいくつを入力すればよい？',
+    fields:[{pre:'x ＝',unit:'',ans:xt}],
+    hints:hints,explain:explain,
+    note:(function(){
+      var d=[[A.L.p,ruleTxt(a2,b2),vp],[A.L.q,ruleTxt(a3,b3),vq]].sort(function(m,n){return KANA.indexOf(m[0])-KANA.indexOf(n[0]);});
+      return '💡 じつは '+d[0][0]+'（'+d[0][1].replace(' ＝ y','')+'）も '+d[1][0]+'（'+d[1][1].replace(' ＝ y','')+'）も、x＝'+xs[0]+' のときは '+ys[0]+' になる！ でも x＝'+xs[1]+' では '+d[0][2]+' と '+d[1][2]+' になって合わない。<b>1つのデータだけで決めず、全部のデータでたしかめる</b>のが名{探|たん}{偵|てい}のやり方だ。';})(),
+    adviceNum:function(v){
+      var x=v[0];
+      if(near(x,f(Y))) return 'それは x ＝ '+Y+' を入れたときの出力だね。今回は「出力が'+Y+'になる入力」を探そう。逆にたどるよ。';
+      if(near(x,Y/a-b)) return '逆にたどるときは、<b>あとからした計算から先にもどす</b>よ。まず「'+op+'」をもどしてから「×'+a+'」をもどそう。';
+      if(near(x,Y/a)) return '「'+op+'」をもどすのをわすれていないかな？ まず '+back.split(' ＝')[0]+' を計算しよう。';
+      if(near(x,(Y+b)/a)) return '「'+op+'」をもどすときは、反対の計算をするよ。'+(b>0?'たした数はひいて':'ひいた数はたして')+'もどそう。';
+      return 'ルールの式に、答えの x を入れて計算してみよう。y が '+Y+' になるかな？ ならなければ、逆にたどって考えよう。';
+    },
+    cmp:['x','y','']
+  };
+}
+var TYPES=[gen01,gen02,gen03];
+
+/* =========================================================
+   図（SVG）　数は問題に合わせて入る
+   ========================================================= */
+function svgRoute(p){
+  var xc=Math.round(57+445*p.D/p.S);
+  return '<svg viewBox="0 0 560 210" role="img" aria-label="学校、コンビニ、駅の位置関係の図">'+
+  '<defs><pattern id="rd" width="16" height="6" patternUnits="userSpaceOnUse"><rect width="10" height="3" fill="#fffaf0"/></pattern></defs>'+
+  '<rect x="50" y="112" width="460" height="12" rx="6" fill="#8b7b65"/><rect x="50" y="116.5" width="460" height="3" fill="url(#rd)"/>'+
+  // 学校
+  '<g transform="translate(20,52)"><rect x="8" y="22" width="58" height="40" fill="#e9dcc0" stroke="#5c4a36" stroke-width="2"/><polygon points="2,24 37,4 72,24" fill="#b3261e"/><rect x="31" y="40" width="12" height="22" fill="#5c4a36"/><rect x="14" y="30" width="10" height="9" fill="#9fc3e0"/><rect x="50" y="30" width="10" height="9" fill="#9fc3e0"/></g>'+
+  '<text x="57" y="150" text-anchor="middle" font-size="15" font-weight="bold" fill="#3a2e22">学校</text>'+
+  // コンビニ
+  '<g transform="translate('+(xc-30)+',66)"><rect x="0" y="12" width="60" height="36" fill="#fff" stroke="#5c4a36" stroke-width="2"/><rect x="0" y="12" width="60" height="10" fill="#2f7d4f"/><rect x="22" y="30" width="16" height="18" fill="#9fc3e0"/>'+
+  '<g transform="translate(48,-8)"><rect width="20" height="13" rx="3" fill="#5b3b7a"/><circle cx="14" cy="6.5" r="4" fill="#cfd9e8"/><line x1="4" y1="13" x2="0" y2="22" stroke="#5b3b7a" stroke-width="3"/></g></g>'+
+  '<text x="'+xc+'" y="150" text-anchor="middle" font-size="15" font-weight="bold" fill="#3a2e22">コンビニ</text>'+
+  // 駅
+  '<g transform="translate(470,60)"><rect x="0" y="22" width="64" height="32" fill="#e9dcc0" stroke="#5c4a36" stroke-width="2"/><rect x="-4" y="14" width="72" height="10" fill="#2c5d8f"/><circle cx="32" cy="6" r="9" fill="#fff" stroke="#5c4a36" stroke-width="2"/><line x1="32" y1="6" x2="32" y2="1" stroke="#3a2e22" stroke-width="2"/><line x1="32" y1="6" x2="36" y2="6" stroke="#3a2e22" stroke-width="2"/></g>'+
+  '<text x="502" y="150" text-anchor="middle" font-size="15" font-weight="bold" fill="#3a2e22">駅</text>'+
+  // 道のり
+  '<g stroke="#7a2d16" stroke-width="2" fill="none"><path d="M57 166 v10 M'+xc+' 166 v10 M502 166 v10 M57 171 H'+xc+' M'+xc+' 171 H502"/></g>'+
+  '<text x="'+((57+xc)/2)+'" y="194" text-anchor="middle" font-size="15" font-weight="bold" fill="#7a2d16">'+p.dist(p.D)+'</text>'+
+  '<text x="'+((xc+502)/2)+'" y="194" text-anchor="middle" font-size="15" font-weight="bold" fill="#7a2d16">'+p.dist(p.S-p.D)+'</text>'+
+  // 時刻
+  '<g font-size="13" font-weight="bold"><rect x="22" y="18" width="70" height="24" rx="12" fill="#17202e"/><text x="57" y="35" text-anchor="middle" fill="#e6c574">'+hm(p.st)+'</text>'+
+  '<rect x="'+(xc-44)+'" y="18" width="88" height="24" rx="12" fill="#5b3b7a"/><text x="'+xc+'" y="35" text-anchor="middle" fill="#fff">📷 '+hm(p.cam)+'</text>'+
+  '<rect x="467" y="18" width="70" height="24" rx="12" fill="#17202e"/><text x="502" y="35" text-anchor="middle" fill="#e6c574">'+hm(p.end)+'</text></g>'+
+  '</svg>';
+}
+function beaker(x,col,label,h){
+  return '<g transform="translate('+x+',40)">'+
+  '<rect x="6" y="'+(110-h)+'" width="58" height="'+h+'" fill="'+col+'" opacity=".85"/>'+
+  '<path d="M0 0 H70 M6 0 V110 Q6 118 14 118 H56 Q64 118 64 110 V0" fill="none" stroke="#5c4a36" stroke-width="3"/>'+
+  '<g stroke="#5c4a36" stroke-width="1.5"><line x1="50" y1="30" x2="64" y2="30"/><line x1="54" y1="55" x2="64" y2="55"/><line x1="50" y1="80" x2="64" y2="80"/></g>'+
+  '<text x="35" y="140" text-anchor="middle" font-size="16" font-weight="bold" fill="#3a2e22">'+label+'</text>'+
+  '<text x="35" y="85" text-anchor="middle" font-size="22" font-weight="bold" fill="#fff" stroke="#3a2e22" stroke-width=".6">?</text></g>';
+}
+function svgBeaker(r1,r2,total){
+  return '<svg viewBox="0 0 560 210" role="img" aria-label="赤・青・黄の液体と合計'+total+'のフラスコの図">'+
+  beaker(20,'#c8463c','赤',50)+beaker(120,'#3b6fb0','青',75)+beaker(220,'#e2b93b','黄',62)+
+  '<text x="102" y="30" text-anchor="middle" font-size="14" font-weight="bold" fill="#7a2d16">'+r1+'</text>'+
+  '<path d="M60 36 Q102 14 145 36" fill="none" stroke="#7a2d16" stroke-width="2"/>'+
+  '<text x="205" y="30" text-anchor="middle" font-size="14" font-weight="bold" fill="#7a2d16">'+r2+'</text>'+
+  '<path d="M165 36 Q205 14 250 36" fill="none" stroke="#7a2d16" stroke-width="2"/>'+
+  '<path d="M310 105 H360" stroke="#5c4a36" stroke-width="4" marker-end="url(#ar)"/>'+
+  '<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8z" fill="#5c4a36"/></marker></defs>'+
+  '<g transform="translate(390,30)"><path d="M45 0 V50 L0 140 Q-4 150 8 150 H122 Q134 150 130 140 L85 50 V0" fill="#fffaf0" stroke="#5c4a36" stroke-width="3"/>'+
+  '<path d="M18 112 L112 112 L127 142 Q129 147 120 147 H10 Q1 147 3 142z" fill="#8a5a2b" opacity=".75"/>'+
+  '<rect x="38" y="-6" width="54" height="10" rx="3" fill="#5c4a36"/>'+
+  '<text x="65" y="102" text-anchor="middle" font-size="18" font-weight="bold" fill="#7a2d16">合計</text>'+
+  '<text x="65" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#fff">'+total+'</text></g>'+
+  '</svg>';
+}
+function svgBox(rows){
+  var t='';
+  rows.forEach(function(r,i){
+    var x=330+i*70;
+    t+='<text x="'+(x+35)+'" y="160" text-anchor="middle" font-size="17" font-weight="bold" fill="#3a2e22">'+r[0]+'</text>'+
+       '<text x="'+(x+35)+'" y="192" text-anchor="middle" font-size="17" font-weight="bold" fill="#7a2d16">'+r[1]+'</text>';
+  });
+  return '<svg viewBox="0 0 560 210" role="img" aria-label="ブラックボックスの図と実験データの表">'+
+  '<defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8z" fill="#5c4a36"/></marker></defs>'+
+  '<circle cx="45" cy="70" r="26" fill="#fff" stroke="#2c5d8f" stroke-width="3"/><text x="45" y="78" text-anchor="middle" font-size="24" font-weight="bold" fill="#2c5d8f" font-style="italic">x</text>'+
+  '<line x1="74" y1="70" x2="118" y2="70" stroke="#5c4a36" stroke-width="4" marker-end="url(#ar2)"/>'+
+  '<rect x="128" y="20" width="200" height="100" rx="12" fill="#17202e" stroke="#c9a24a" stroke-width="3"/>'+
+  '<g fill="none" stroke="#3a4b66" stroke-width="5"><circle cx="175" cy="70" r="20"/><circle cx="280" cy="70" r="14"/></g>'+
+  '<text x="228" y="82" text-anchor="middle" font-size="40" font-weight="bold" fill="#e6c574">?</text>'+
+  '<circle cx="310" cy="34" r="5" fill="#d33"/><text x="228" y="112" text-anchor="middle" font-size="11" fill="#9fb0c8" letter-spacing="3">BLACK BOX</text>'+
+  '<line x1="338" y1="70" x2="382" y2="70" stroke="#5c4a36" stroke-width="4" marker-end="url(#ar2)"/>'+
+  '<circle cx="420" cy="70" r="26" fill="#fff" stroke="#b3261e" stroke-width="3"/><text x="420" y="78" text-anchor="middle" font-size="24" font-weight="bold" fill="#b3261e" font-style="italic">y</text>'+
+  '<g stroke="#a88a52" stroke-width="1.5" fill="#fffaf0"><rect x="250" y="140" width="290" height="62"/></g>'+
+  '<line x1="250" y1="171" x2="540" y2="171" stroke="#a88a52"/><line x1="330" y1="140" x2="330" y2="202" stroke="#a88a52"/>'+
+  '<text x="290" y="160" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c5d8f">入力 x</text>'+
+  '<text x="290" y="192" text-anchor="middle" font-size="14" font-weight="bold" fill="#b3261e">出力 y</text>'+t+
+  '<text x="20" y="170" font-size="13" fill="#6b5a45">実験データ</text><text x="20" y="190" font-size="13" fill="#6b5a45">（3回分）→</text>'+
+  '</svg>';
+}
+
+
+/* =========================================================
+   保存（localStorage）
+   ========================================================= */
+var KEY='sansuMystery_data';
+/* prob：いま出ている問題（難易度と seed）　solved：型ごと・難易度ごとの解決数　lv：型ごとに選んでいる難易度 */
+var store={cleared:{},notes:{},marks:{},cmp:{},hint:{},prob:{},solved:{},lv:{}};
+function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d)for(var k in store)if(d[k])store[k]=d[k];}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+load();
+var CASES=[];
+function newSeed(){return Math.floor(Math.random()*2147483646)+1;}
+/* i 番目の型に、新しい問題を作る（メモ・マーカー・ヒントもリセット） */
+function newProblem(i,lv){
+  lv=lv||store.lv[i]||2; store.lv[i]=lv;
+  store.prob[i]={lv:lv,seed:newSeed()};
+  delete store.cleared[i]; delete store.notes[i]; delete store.marks[i]; delete store.cmp[i]; delete store.hint[i];
+  CASES[i]=TYPES[i](lv,RNG(store.prob[i].seed)); save();
+}
+function solvedOf(i){return store.solved[i]||[0,0,0];}
+function solvedSum(i){return solvedOf(i).reduce(function(a,b){return a+b;},0);}
+TYPES.forEach(function(g,i){
+  var pr=store.prob[i];
+  if(pr&&pr.seed){CASES[i]=g(pr.lv,RNG(pr.seed));}
+  else{newProblem(i,store.lv[i]||2);}   // 前の版（決まった3問）の記録は、新しい問題に入れかえる
+});
+
+/* =========================================================
+   画面描画
+   ========================================================= */
+var cur=0, sel=null;
+var $=function(id){return document.getElementById(id);};
+
+function renderTabs(){
+  $('tabs').innerHTML=CASES.map(function(c,i){
+    var n=solvedSum(i);
+    return '<button class="tab'+(i===cur?' active':'')+(n?' cleared':'')+'" data-i="'+i+'"><b>事件'+c.no+'</b>'+rb(c.title)+'<span class="badge">解決'+n+'件</span></button>';
+  }).join('');
+}
+function renderCase(){
+  var c=CASES[cur],ctr={i:0};
+  var cards=c.cards.map(function(cd){
+    return '<div class="card '+cd.cls+'"><span class="tag">'+rb(cd.tag)+'</span><div>'+fmt(cd.text,ctr)+'</div></div>';
+  }).join('');
+  var story=fmt(c.story,ctr);
+  $('caseFile').innerHTML=
+    lvBar()+
+    '<div class="sec caseHead"><div><div class="no">CASE FILE '+c.no+'　<span class="lvTag lv'+c.lv+'">'+LV_NAME[c.lv]+'</span></div><h2 class="serif">'+rb(c.title)+'</h2></div><span class="unit">単元：'+c.unit+'</span></div>'+
+    '<div class="sec"><h3 class="secTitle"><span class="ic">📜</span>事件のあらすじ</h3><div class="story">'+story+'</div></div>'+
+    '<div class="sec"><h3 class="secTitle"><span class="ic">🗂</span>'+'現場データ・証言カード'+'</h3>'+
+    '<div class="cards">'+cards+'</div><p class="tip">✏️ 点線のついた数や文をタップすると、マーカーが引けるよ（もう一度タップで消える）。</p></div>'+
+    '<div class="sec" style="margin-bottom:0"><h3 class="secTitle"><span class="ic">🗺</span>図で見る</h3><div class="diagram">'+c.svg+'</div></div>';
+  var marks=store.marks[cur]||[];
+  marks.forEach(function(n){var el=document.querySelector('.mk[data-mk="'+n+'"]');if(el)el.classList.add('on');});
+  $('memo').value=store.notes[cur]||'';
+  renderCmp(); renderSubmit(); updateHintCount();
+}
+
+function lvBar(){
+  var sv=solvedOf(cur),cl=store.lv[cur]||2;
+  return '<div class="lvBar"><span class="lvLabel">むずかしさ</span><div class="lvBtns">'+
+    [1,2,3].map(function(l){return '<button class="lvBtn'+(l===cl?' on':'')+'" data-lv="'+l+'">'+LV_NAME[l]+(sv[l-1]?'<small>解決'+sv[l-1]+'</small>':'')+'</button>';}).join('')+
+    '</div><button class="newBtn" id="newBtn">🎲 新しい事件</button><div class="lvMsg" id="lvMsg"></div></div>';
+}
+function renderLvBar(){var el=document.querySelector('#caseFile .lvBar');if(el)el.outerHTML=lvBar();}
+/* 解きかけの問題を入れかえるときは、2回おしてもらう（ブラウザのダイアログは使わない） */
+var pendingNew=0;
+function confirmNew(){
+  var now=Date.now();
+  if(now-pendingNew<5000){pendingNew=0;return true;}
+  pendingNew=now;
+  var m=$('lvMsg'); if(m){m.innerHTML='🎲 新しい事件にする？ 今の事件のメモやマーカーは消えるよ。よければ、<b>もう一度おしてね</b>。';m.classList.add('show');}
+  return false;
+}
+function goNew(lv){
+  pendingNew=0; newProblem(cur,lv); sel=null; renderTabs(); renderCase();
+  document.querySelectorAll('.pane').forEach(function(p){p.scrollTop=0;});
+}
+/* マーカー・難易度・新しい事件 */
+$('caseFile').addEventListener('click',function(e){
+  var lb=e.target.closest('.lvBtn');
+  if(lb){if(store.cleared[cur]||confirmNew()) goNew(+lb.dataset.lv); return;}
+  if(e.target.closest('#newBtn')){if(store.cleared[cur]||confirmNew()) goNew(); return;}
+  var el=e.target.closest('.mk'); if(!el) return;
+  el.classList.toggle('on');
+  store.marks[cur]=[].map.call(document.querySelectorAll('#caseFile .mk.on'),function(m){return +m.dataset.mk;});
+  save();
+});
+
+/* タブ */
+$('tabs').addEventListener('click',function(e){
+  var b=e.target.closest('.tab'); if(!b) return;
+  cur=+b.dataset.i; sel=null; renderTabs(); renderCase();
+  document.querySelectorAll('.pane').forEach(function(p){p.scrollTop=0;});
+});
+
+/* メモ */
+$('memo').addEventListener('input',function(){store.notes[cur]=this.value;save();});
+
+/* =========================================================
+   電卓（eval を使わない自前の計算）
+   ========================================================= */
+var expr='';
+var KEYS=['C','←','(',')','7','8','9','÷','4','5','6','×','1','2','3','－','0','.','＝','＋'];
+$('keys').innerHTML=KEYS.map(function(k){
+  var c=/[÷×－＋()]/.test(k)?'op':k==='＝'?'eq':(k==='C'||k==='←')?'cl':'';
+  return '<button class="'+c+'" data-k="'+k+'">'+k+'</button>';
+}).join('');
+function calcEval(s){
+  var t=s.replace(/×/g,'*').replace(/÷/g,'/').replace(/－/g,'-').replace(/＋/g,'+');
+  var toks=t.match(/\d+\.?\d*|\.\d+|[+\-*/()]/g)||[],p=0;
+  function peek(){return toks[p];}
+  function E(){var v=T();while(peek()==='+'||peek()==='-'){var o=toks[p++],r=T();v=o==='+'?v+r:v-r;}return v;}
+  function T(){var v=F();while(peek()==='*'||peek()==='/'){var o=toks[p++],r=F();v=o==='*'?v*r:v/r;}return v;}
+  function F(){var k=toks[p++];if(k==='-')return -F();if(k==='('){var v=E();if(toks[p++]!==')')throw 0;return v;}var n=parseFloat(k);if(isNaN(n))throw 0;return n;}
+  var v=E(); if(p!==toks.length||!isFinite(v)) throw 0;
+  return Math.round(v*1e8)/1e8;
+}
+var lastAns='';
+$('keys').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b) return; var k=b.dataset.k;
+  if(k==='C'){expr='';$('calcExpr').textContent='';$('calcOut').textContent='0';return;}
+  if(k==='←'){expr=expr.slice(0,-1);}
+  else if(k==='＝'){
+    try{var v=calcEval(expr);$('calcExpr').textContent=expr+' ＝';$('calcOut').textContent=v;lastAns=expr+' ＝ '+v;expr=String(v);}
+    catch(err){$('calcExpr').textContent='式をたしかめてね';}
+    return;
+  } else expr+=k;
+  $('calcOut').textContent=expr||'0';
+});
+$('toMemo').addEventListener('click',function(){
+  if(!lastAns) return;
+  var m=$('memo'); m.value+=(m.value&&!/\n$/.test(m.value)?'\n':'')+lastAns+'\n';
+  store.notes[cur]=m.value; save();
+});
+
+/* =========================================================
+   線分図メモ（数をならべてくらべる）
+   ========================================================= */
+var COLORS=['#2c5d8f','#b3261e','#c9a24a'];
+function renderCmp(){
+  var c=CASES[cur],d=store.cmp[cur]||[['',''],['',''],['','']];
+  $('cmpRows').innerHTML=d.map(function(r,i){
+    var ph=c.cmp[i]?c.cmp[i].replace(/\{([^|]+)\|[^}]+\}/g,'$1'):'名前（自由に）';
+    return '<div class="cmpRow"><input data-r="'+i+'" data-c="0" placeholder="'+ph+'" value="'+esc(r[0])+'">'+
+      '<input data-r="'+i+'" data-c="1" inputmode="decimal" placeholder="数" value="'+esc(r[1])+'">'+
+      '<div class="bar"><i style="background:'+COLORS[i]+'"></i></div></div>';
+  }).join('');
+  drawBars();
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function toNum(s){
+  s=String(s).replace(/[０-９．]/g,function(ch){return String.fromCharCode(ch.charCodeAt(0)-0xFEE0);}).replace(/[－ー−]/g,'-').replace(/\s/g,'');
+  if(s===''||!/^-?\d*\.?\d+$/.test(s)) return null;
+  return parseFloat(s);
+}
+function drawBars(){
+  var d=store.cmp[cur]||[['',''],['',''],['','']];
+  var vals=d.map(function(r){return toNum(r[1]);});
+  var mx=Math.max.apply(null,vals.map(function(v){return v&&v>0?v:0;}));
+  var bars=document.querySelectorAll('#cmpRows .bar i');
+  vals.forEach(function(v,i){bars[i].style.width=(mx>0&&v>0?v/mx*100:0)+'%';});
+  var f=vals.filter(function(v){return v!==null;});
+  var info='';
+  if(f.length===2&&vals[0]!==null&&vals[1]!==null) info='上の2つの差：'+(Math.round(Math.abs(vals[0]-vals[1])*1e6)/1e6);
+  else if(f.length>=2) info='合計：'+(Math.round(f.reduce(function(a,b){return a+b;},0)*1e6)/1e6);
+  $('cmpInfo').textContent=info;
+}
+$('cmpRows').addEventListener('input',function(e){
+  var t=e.target; if(!t.dataset.r) return;
+  var d=store.cmp[cur]||[['',''],['',''],['','']];
+  d[+t.dataset.r][+t.dataset.c]=t.value; store.cmp[cur]=d; save(); drawBars();
+});
+$('cmpClear').addEventListener('click',function(){delete store.cmp[cur];save();renderCmp();});
+
+/* =========================================================
+   推理の提出
+   ========================================================= */
+function renderSubmit(){
+  var c=CASES[cur];
+  var html='<h3 class="secTitle"><span class="ic">⚖</span><span>'+rb('{推理|すいり}の提出')+'</span></h3>';
+  if(store.cleared[cur]){
+    html+='<div class="solvedBox"><div class="mini">CASE CLOSED</div><p style="margin:4px 0 8px">この事件は解決ずみだ。みごとな{推理|すいり}だった！</p>'+
+      '<button class="ghost" id="newHere">🎲 新しい事件にちょうせん</button><button class="ghost" id="reExplain">解説をもう一度見る</button><button class="ghost" id="retry">もう一度ときなおす</button></div>';
+    $('submitArea').innerHTML=rb(html);
+    $('newHere').onclick=function(){goNew();};
+    $('reExplain').onclick=function(){showClear(false);};
+    $('retry').onclick=function(){delete store.cleared[cur];save();sel=null;renderSubmit();};
+    return;
+  }
+  html+='<p class="q"><span class="qn">1</span>'+rb(c.choiceQ)+'</p><div class="choices">'+
+    c.choices.map(function(ch){return '<button class="choice" data-k="'+ch.k+'"><span class="k">'+ch.k+'</span><span>'+rb(ch.t)+'</span><span class="mark" data-m="c'+ch.k+'"></span></button>';}).join('')+
+    '</div><p class="q"><span class="qn">2</span>'+rb(c.numQ)+'</p><div class="nums">'+
+    c.fields.map(function(f,i){return '<label class="nf">'+f.pre+' <input data-f="'+i+'" inputmode="decimal" autocomplete="off"> '+f.unit+' <span class="mark" data-m="n'+i+'"></span></label>';}).join('')+
+    '</div><button class="submitBtn" id="submitBtn">🔍 '+rb('{推理|すいり}を提出する')+'</button><div class="feedback" id="fb"></div>';
+  $('submitArea').innerHTML=html;
+  document.querySelectorAll('.choice').forEach(function(b){
+    b.onclick=function(){sel=b.dataset.k;document.querySelectorAll('.choice').forEach(function(x){x.classList.toggle('sel',x===b);});};
+  });
+  $('submitBtn').onclick=judge;
+}
+function judge(){
+  var c=CASES[cur],fb=$('fb');
+  var inputs=[].slice.call(document.querySelectorAll('.nf input'));
+  var vals=inputs.map(function(i){return toNum(i.value);});
+  document.querySelectorAll('.mark').forEach(function(m){m.textContent='';m.className='mark';});
+  if(!sel||vals.some(function(v){return v===null;})){
+    fb.className='feedback info show';
+    fb.innerHTML=rb('<h4>📝 まだ空いているところがあるよ</h4>'+(!sel?'<div>・① の答えをア〜ウから1つえらぼう。</div>':'')+(vals.some(function(v){return v===null;})?'<div>・② の数を半角または全角の数字で書こう。</div>':''));
+    return;
+  }
+  var okC=sel===c.correct;
+  var okN=c.fields.map(function(f,i){return Math.abs(vals[i]-f.ans)<1e-9;});
+  var allN=okN.every(Boolean);
+  // ○×の表示
+  var mc=document.querySelector('[data-m="c'+sel+'"]'); mc.textContent=okC?'○':'×'; mc.classList.add(okC?'ok':'ng');
+  okN.forEach(function(o,i){var m=document.querySelector('[data-m="n'+i+'"]');m.textContent=o?'○':'×';m.classList.add(o?'ok':'ng');});
+  if(okC&&allN){
+    fb.className='feedback';
+    if(!store.cleared[cur]){var sv=solvedOf(cur).slice();sv[CASES[cur].lv-1]++;store.solved[cur]=sv;}
+    store.cleared[cur]=true; save(); renderTabs(); renderLvBar();
+    showClear(true); renderSubmit(); return;
+  }
+  var tips=[];
+  if(!okC) tips.push('<li><span class="mark ng">×</span> <b>① 根{拠|きょ}</b>：'+(c.adviceChoice[sel]||'')+'</li>');
+  else tips.push('<li><span class="mark ok">○</span> <b>① 根{拠|きょ}</b>：正しく見ぬけているね！</li>');
+  if(!allN) tips.push('<li><span class="mark ng">×</span> <b>② 数</b>：'+c.adviceNum(vals)+'</li>');
+  else tips.push('<li><span class="mark ok">○</span> <b>② 数</b>：計算はばっちりだ！</li>');
+  fb.className='feedback wrong show';
+  fb.innerHTML=rb('<h4>🤔 {推理|すいり}に{矛盾|むじゅん}があるようだ…</h4><div style="font-size:.9rem;color:#6b5a45">でも、あと一歩！ この証{拠|こ}を見直してみよう。</div><ul>'+tips.join('')+'</ul><div style="font-size:.85rem;color:#6b5a45">こまったら、上の「🔎 ヒント」も使ってみよう。</div>');
+  fb.classList.remove('shake'); void fb.offsetWidth; fb.classList.add('shake');
+}
+
+/* 正解の演出と解説 */
+function showClear(anim){
+  var c=CASES[cur];
+  $('clearTitle').innerHTML='事件'+c.no+'「'+rb(c.title)+'」（'+LV_NAME[c.lv]+'）の解き方';
+  $('clearSteps').innerHTML=c.explain.map(function(s,i){return '<li style="animation-delay:'+(0.6+i*0.25)+'s"><span class="st">'+rb(s[0])+'</span>'+rb(s[1])+'</li>';}).join('');
+  $('clearNote').innerHTML=rb(c.note);
+  var total=CASES.reduce(function(a,_,i){return a+solvedSum(i);},0);
+  var allType=CASES.every(function(_,i){return solvedSum(i)>0;});
+  $('allClear').innerHTML=rb('🏅 これまでに解決した事件：<b>'+total+'件</b>'+(allType?'<br>3つの型をすべて解決！ きみは名{探|たん}{偵|てい}だ！':''));
+  var nx=(cur+1)%CASES.length;
+  $('clearBtns').innerHTML='<button class="ghost" id="goSame">🎲 同じ型の新しい事件へ</button><button class="ghost" id="goNext">事件'+CASES[nx].no+'へ ▶</button><button class="ghost" data-close="clearOv">とじる</button>';
+  $('goSame').onclick=function(){closeOv('clearOv');goNew();};
+  $('goNext').onclick=function(){closeOv('clearOv');cur=nx;sel=null;renderTabs();renderCase();document.querySelectorAll('.pane').forEach(function(p){p.scrollTop=0;});};
+  var st=document.querySelector('.stamp'); st.style.animation='none'; void st.offsetWidth; st.style.animation='';
+  if(!anim){st.style.animation='none';st.style.opacity=1;st.style.transform='rotate(-10deg)';}else{st.style.opacity='';st.style.transform='';}
+  openOv('clearOv');
+}
+
+/* =========================================================
+   段階的ヒント
+   ========================================================= */
+var HINT_NAMES=['ヒント1（着眼点）','ヒント2（とちゅうの式）','ヒント3（考え方の{核|かく}心）'];
+function updateHintCount(){var n=store.hint[cur]||0;$('hintCount').textContent=n?'（'+n+'/3）':'';}
+function renderHint(){
+  var c=CASES[cur],n=store.hint[cur]||0,h='';
+  h+='<p style="margin:0 0 10px;color:#6b5a45;font-size:.9rem">事件'+c.no+'「'+rb(c.title)+'」（'+LV_NAME[c.lv]+'）　ボタンをおすたびに、ヒントが1つずつ出てくるよ。</p>';
+  for(var i=0;i<3;i++){
+    if(i<n) h+='<div class="hintItem"><b>'+rb(HINT_NAMES[i])+'</b><br>'+rb(c.hints[i])+'</div>';
+    else h+='<div class="hintLock">🔒 '+rb(HINT_NAMES[i])+'</div>';
+  }
+  h+='<button class="hintNext" id="hintNext"'+(n>=3?' disabled':'')+'>'+(n>=3?'ヒントはここまで。あとはきみの{推理|すいり}だ！':'次のヒントを見る（'+(n+1)+'/3）')+'</button>';
+  $('hintBody').innerHTML=rb(h);
+  var b=$('hintNext'); if(b) b.onclick=function(){store.hint[cur]=Math.min(3,(store.hint[cur]||0)+1);save();renderHint();updateHintCount();};
+}
+$('hintBtn').onclick=function(){renderHint();openOv('hintOv');};
+
+/* モーダル共通 */
+function openOv(id){$(id).classList.add('show');}
+function closeOv(id){$(id).classList.remove('show');}
+document.addEventListener('click',function(e){
+  var c=e.target.closest('[data-close]'); if(c){closeOv(c.dataset.close);return;}
+  if(e.target.classList.contains('overlay')) e.target.classList.remove('show');
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.overlay.show').forEach(function(o){o.classList.remove('show');});});
+
+/* 開始 */
+renderTabs(); renderCase();
+</script>
+</body>
+</html>
